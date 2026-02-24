@@ -11,7 +11,7 @@
 <body>
   <header>
     <div class="wrap">
-      <h2 style="margin:0;">Krizmanici s Knežije</h2>
+      <h2 style="margin:0;">Legendarni krizmanici s Knežije</h2>
       <small>Nismo stvoreni da dimimo, nego da gorimo 🔥</small>
     </div>
   </header>
@@ -39,6 +39,7 @@
       <div class="row">
         <div>
           <b>Obavijesti</b><br/>
+          <span class="muted">Update by editing <code>announcements.json</code>.</span>
         </div>
         <div class="muted" id="lastCheck"></div>
       </div>
@@ -49,7 +50,8 @@
     <section id="tab-kateheze" class="card" style="display:none;">
       <div class="row">
         <div>
-          <b>Kateheze</b><br/>
+          <b>Kateheze (po tjednima)</b><br/>
+          <span class="muted">Update by editing <code>kateheze.json</code>.</span>
         </div>
       </div>
 
@@ -61,6 +63,7 @@
       <div class="row">
         <div>
           <b>Po☕</b><br/>
+          <span class="muted">Update by editing <code>jokes.json</code>.</span>
         </div>
         <button class="btn" id="randomJokeBtn">🎲 Random</button>
       </div>
@@ -73,6 +76,7 @@
       <div class="row">
         <div>
           <b>Pitanja i odgovori</b><br/>
+          <span class="muted">Update by editing <code>faq.json</code>.</span>
         </div>
         <input id="faqSearch" placeholder="Search..." />
       </div>
@@ -151,33 +155,24 @@
     }
 
     // Render kateheze (LESSONS)
-function renderKateheze() {
-  const list = document.getElementById("katehezeList");
-  list.innerHTML = "";
+    function renderKateheze() {
+      const list = document.getElementById("katehezeList");
+      list.innerHTML = "";
 
-  const items = state.kateheze
-    .slice()
-    .sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+      const items = state.kateheze.slice().sort((a,b)=> (b.date||"").localeCompare(a.date||""));
 
-  items.forEach((lesson, index) => {
-
-    const div = document.createElement("div");
-    div.className = "lessonCard";
-
-    div.innerHTML = `
-      <div class="lessonHeader">
-        <span class="lessonTitle">📖 ${lesson.title}</span>
-        <span class="lessonDate">${lesson.date}</span>
-      </div>
-
-      <div class="lessonText">
-        ${(lesson.text || "").replaceAll("\n","<br/>")}
-      </div>
-    `;
-
-    list.appendChild(div);
-  });
-}
+      items.forEach((lesson) => {
+        const div = document.createElement("div");
+        div.className = "post";
+        div.innerHTML = `
+          <h3>${lesson.title || "Kateheza"}</h3>
+          <div class="meta">${lesson.date || ""}</div>
+          <p style="margin:10px 0 0;">${(lesson.text || "").replaceAll("\n","<br/>")}</p>
+          ${lesson.link ? `<p style="margin:10px 0 0;"><a href="${lesson.link}" target="_blank" rel="noreferrer">📎 Materijal</a></p>` : ""}
+        `;
+        list.appendChild(div);
+      });
+    }
 
     // Render jokes
     function renderJokes() {
