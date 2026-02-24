@@ -161,40 +161,33 @@ input {
   border: 1px solid #d1d5db;
   min-width: 240px;
 }
-/* ===== KATEHEZE LESSON CARDS ===== */
+/* ===== KATEHEZE = SAME AS FAQ ===== */
 
-.lessonCard{
+/* each lesson block */
+#katehezeList details{
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:12px 14px;
   background:white;
-  border-radius:18px;
-  padding:18px 20px;
-  margin-bottom:18px;
-  box-shadow:0 10px 25px rgba(0,0,0,0.12);
-  animation:fadeIn 0.5s ease;
+  transition: all .2s ease;
 }
 
-.lessonHeader{
+/* spacing between lessons */
+#katehezeList details + details{
+  margin-top:12px;
+}
+
+/* title line */
+#katehezeList summary{
+  cursor:pointer;
+  font-weight:700;
+  font-size:16px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:10px;
 }
 
-.lessonTitle{
-  font-size:18px;
-  font-weight:700;
-  color:#111827;
-}
-
-.lessonDate{
-  font-size:13px;
-  color:#6b7280;
-  background:#eef2ff;
-  padding:4px 10px;
-  border-radius:999px;
-}
-
-.lessonText{
-  margin-top:10px;
-  line-height:1.6;
-  color:#374151;
+/* hover effect (nice!) */
+#katehezeList summary:hover{
+  color:#2563eb;
 }
