@@ -3,9 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Legendarni krizmanici s Knežije</title>
+  <title>Krizmanici s Knežije</title>
 
-  <!-- IMPORTANT: this loads your external CSS file -->
   <link rel="stylesheet" href="style.css" />
 </head>
 
@@ -13,7 +12,7 @@
   <header>
     <div class="wrap">
       <h2 style="margin:0;">Legendarni krizmanici s Knežije</h2>
-      <small>Announcements • Jokes • FAQ</small>
+      <small>Nismo stvoreni da dimimo, nego da gorimo 🔥</small>
     </div>
   </header>
 
@@ -21,16 +20,16 @@
     <div class="row">
       <div class="tabs">
         <button class="tabbtn active" data-tab="ann">
-          📢 Announcements
+          📢 Obavijesti
           <span id="newBadge" class="badge" style="display:none;margin-left:6px;">NEW</span>
         </button>
-        <button class="tabbtn" data-tab="jokes">😄 Jokes</button>
-        <button class="tabbtn" data-tab="faq">❓ FAQ</button>
+        <button class="tabbtn" data-tab="kateheze">📖 Kateheze po tjednima</button>
+        <button class="tabbtn" data-tab="jokes">Po☕</button>
+        <button class="tabbtn" data-tab="faq">❓ (ne)Zanimljiva pitanja</button>
       </div>
 
       <div class="row" style="gap:10px;">
         <button class="btn" id="refreshBtn">↻ Refresh</button>
-        <!-- Optional: add your group link -->
         <!-- <a class="btn" href="https://t.me/yourgroup" target="_blank" rel="noreferrer">Join Telegram</a> -->
       </div>
     </div>
@@ -39,7 +38,7 @@
     <section id="tab-ann" class="card">
       <div class="row">
         <div>
-          <b>Latest announcements</b><br/>
+          <b>Obavijesti</b><br/>
           <span class="muted">Update by editing <code>announcements.json</code>.</span>
         </div>
         <div class="muted" id="lastCheck"></div>
@@ -47,14 +46,26 @@
       <div id="annList" style="margin-top:12px;"></div>
     </section>
 
+    <!-- KATEHEZE -->
+    <section id="tab-kateheze" class="card" style="display:none;">
+      <div class="row">
+        <div>
+          <b>Kateheze (po tjednima)</b><br/>
+          <span class="muted">Update by editing <code>kateheze.json</code>.</span>
+        </div>
+      </div>
+
+      <div id="katehezeList" style="margin-top:12px;"></div>
+    </section>
+
     <!-- JOKES -->
     <section id="tab-jokes" class="card" style="display:none;">
       <div class="row">
         <div>
-          <b>Jokes</b><br/>
+          <b>Po☕</b><br/>
           <span class="muted">Update by editing <code>jokes.json</code>.</span>
         </div>
-        <button class="btn" id="randomJokeBtn">🎲 Random joke</button>
+        <button class="btn" id="randomJokeBtn">🎲 Random</button>
       </div>
       <div id="jokeBox" class="post" style="margin-top:12px;"></div>
       <div id="jokesList" style="margin-top:12px;"></div>
@@ -64,40 +75,54 @@
     <section id="tab-faq" class="card" style="display:none;">
       <div class="row">
         <div>
-          <b>Frequently asked questions</b><br/>
+          <b>Pitanja i odgovori</b><br/>
           <span class="muted">Update by editing <code>faq.json</code>.</span>
         </div>
-        <input id="faqSearch" placeholder="Search FAQ..." />
+        <input id="faqSearch" placeholder="Search..." />
       </div>
       <div id="faqList" style="margin-top:12px;"></div>
     </section>
-
-    <div class="footer">Made with GitHub Pages ✅</div>
   </div>
 
   <script>
+    // Tabs
     const tabs = document.querySelectorAll(".tabbtn");
-    const sections = { ann: "tab-ann", jokes: "tab-jokes", faq: "tab-faq" };
+    const sections = {
+      ann: "tab-ann",
+      kateheze: "tab-kateheze",
+      jokes: "tab-jokes",
+      faq: "tab-faq"
+    };
 
     tabs.forEach(btn => btn.addEventListener("click", () => {
       tabs.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       Object.values(sections).forEach(id => document.getElementById(id).style.display = "none");
       document.getElementById(sections[btn.dataset.tab]).style.display = "block";
+
+      // If user opens announcements tab, mark as seen
+      if (btn.dataset.tab === "ann") markAnnouncementsSeen();
     }));
 
-    const state = { announcements: [], jokes: [], faq: [] };
+    // Data
+    const state = {
+      announcements: [],
+      kateheze: [],
+      jokes: [],
+      faq: []
+    };
 
     function nowStamp() {
       return new Date().toLocaleString();
     }
 
     async function loadJSON(path) {
-      const res = await fetch(`${path}?v=${Date.now()}`);
+      const res = await fetch(`${path}?v=${Date.now()}`); // cache-bust
       if (!res.ok) throw new Error(`Failed to load ${path}`);
       return await res.json();
     }
 
+    // Render announcements
     function renderAnnouncements() {
       const el = document.getElementById("annList");
       el.innerHTML = "";
@@ -108,7 +133,7 @@
         const div = document.createElement("div");
         div.className = "post";
         div.innerHTML = `
-          <h3>${p.title || "Announcement"}</h3>
+          <h3>${p.title || "Obavijest"}</h3>
           <div class="meta">${p.date || ""} ${p.tag ? `• <span class="badge">${p.tag}</span>` : ""}</div>
           <p style="margin:10px 0 0;">${(p.text || "").replaceAll("\n","<br/>")}</p>
         `;
@@ -122,18 +147,41 @@
     }
 
     function markAnnouncementsSeen() {
-      const latest = state.announcements.slice().sort((a,b)=> (b.date||"").localeCompare(a.date||""))[0]?.date || "";
+      const items = state.announcements.slice().sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+      const latest = items[0]?.date || "";
       if (latest) localStorage.setItem("lastSeenAnnouncement", latest);
-      document.getElementById("newBadge").style.display = "none";
+      const badge = document.getElementById("newBadge");
+      if (badge) badge.style.display = "none";
     }
 
+    // Render kateheze (LESSONS)
+    function renderKateheze() {
+      const list = document.getElementById("katehezeList");
+      list.innerHTML = "";
+
+      const items = state.kateheze.slice().sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+
+      items.forEach((lesson) => {
+        const div = document.createElement("div");
+        div.className = "post";
+        div.innerHTML = `
+          <h3>${lesson.title || "Kateheza"}</h3>
+          <div class="meta">${lesson.date || ""}</div>
+          <p style="margin:10px 0 0;">${(lesson.text || "").replaceAll("\n","<br/>")}</p>
+          ${lesson.link ? `<p style="margin:10px 0 0;"><a href="${lesson.link}" target="_blank" rel="noreferrer">📎 Materijal</a></p>` : ""}
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    // Render jokes
     function renderJokes() {
       const list = document.getElementById("jokesList");
       list.innerHTML = "";
       state.jokes.forEach(j => {
         const div = document.createElement("div");
         div.className = "post";
-        div.innerHTML = `<b>${j.title || "Joke"}</b><p style="margin:8px 0 0;">${(j.text||"").replaceAll("\n","<br/>")}</p>`;
+        div.innerHTML = `<b>${j.title || "Po☕"}</b><p style="margin:8px 0 0;">${(j.text||"").replaceAll("\n","<br/>")}</p>`;
         list.appendChild(div);
       });
     }
@@ -142,9 +190,10 @@
       if (!state.jokes.length) return;
       const j = state.jokes[Math.floor(Math.random() * state.jokes.length)];
       document.getElementById("jokeBox").innerHTML =
-        `<b>${j.title || "Random joke"}</b><p style="margin:8px 0 0;">${(j.text||"").replaceAll("\n","<br/>")}</p>`;
+        `<b>${j.title || "Random"}</b><p style="margin:8px 0 0;">${(j.text||"").replaceAll("\n","<br/>")}</p>`;
     }
 
+    // Render FAQ
     function renderFAQ(filter="") {
       const list = document.getElementById("faqList");
       list.innerHTML = "";
@@ -154,33 +203,42 @@
         .filter(x => !f || (x.q||"").toLowerCase().includes(f) || (x.a||"").toLowerCase().includes(f))
         .forEach(item => {
           const d = document.createElement("details");
-          d.innerHTML = `<summary>${item.q || "Question"}</summary><div style="margin-top:8px;" class="muted">${(item.a||"").replaceAll("\n","<br/>")}</div>`;
+          d.innerHTML = `<summary>${item.q || "Pitanje"}</summary><div style="margin-top:8px;" class="muted">${(item.a||"").replaceAll("\n","<br/>")}</div>`;
           list.appendChild(d);
         });
     }
 
+    // Refresh all data
     async function refreshAll() {
-      document.getElementById("lastCheck").textContent = "Checking...";
+      const lastCheck = document.getElementById("lastCheck");
+      lastCheck.textContent = "Checking...";
       try {
         state.announcements = await loadJSON("announcements.json");
+        state.kateheze = await loadJSON("kateheze.json");
         state.jokes = await loadJSON("jokes.json");
         state.faq = await loadJSON("faq.json");
 
         renderAnnouncements();
+        renderKateheze();
         renderJokes();
         renderFAQ(document.getElementById("faqSearch").value);
-        document.getElementById("lastCheck").textContent = `Last check: ${nowStamp()}`;
+
+        lastCheck.textContent = `Last check: ${nowStamp()}`;
       } catch (e) {
-        document.getElementById("lastCheck").textContent = "Error loading content.";
+        lastCheck.textContent = "Error loading content.";
         alert(e.message);
       }
     }
 
+    // Events
     document.getElementById("refreshBtn").addEventListener("click", refreshAll);
-    document.querySelector('[data-tab="ann"]').addEventListener("click", markAnnouncementsSeen);
-    document.getElementById("randomJokeBtn").addEventListener("click", randomJoke);
+
+    const randomBtn = document.getElementById("randomJokeBtn");
+    if (randomBtn) randomBtn.addEventListener("click", randomJoke);
+
     document.getElementById("faqSearch").addEventListener("input", (e)=> renderFAQ(e.target.value));
 
+    // Init
     refreshAll();
   </script>
 </body>
