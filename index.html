@@ -161,25 +161,25 @@ function renderKateheze() {
 
   const items = state.kateheze
     .slice()
-    .sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
-  items.forEach((lesson, index) => {
+  items.forEach(lesson => {
+    const d = document.createElement("details");
 
-    const div = document.createElement("div");
-    div.className = "lessonCard";
+    // OPTIONAL: open the newest lesson automatically
+    // d.open = true;
 
-    div.innerHTML = `
-      <div class="lessonHeader">
-        <span class="lessonTitle">📖 ${lesson.title}</span>
-        <span class="lessonDate">${lesson.date}</span>
-      </div>
-
-      <div class="lessonText">
-        ${(lesson.text || "").replaceAll("\n","<br/>")}
+    d.innerHTML = `
+      <summary>
+        📖 ${lesson.title || "Kateheza"}
+        <span class="badge" style="margin-left:8px;">${lesson.date || ""}</span>
+      </summary>
+      <div style="margin-top:8px;" class="muted">
+        ${(lesson.text || "").replaceAll("\n", "<br/>")}
       </div>
     `;
 
-    list.appendChild(div);
+    list.appendChild(d);
   });
 }
 
