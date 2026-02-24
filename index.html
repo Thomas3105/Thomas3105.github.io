@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Student Hub</title>
+  <style>
+    body { font-family: system-ui, Arial; margin: 0; background:#f6f7fb; }
+    header { padding: 18px 20px; background:#111827; color:white; }
+    header small { opacity:.8; display:block; margin-top:6px; }
+    .wrap { max-width: 980px; margin: 18px auto; padding: 0 14px; }
+    .tabs { display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 12px; }
+    .tabbtn {
+      border: 1px solid #d1d5db; background:white; padding:10px 12px;
+      border-radius: 12px; cursor:pointer; font-weight:600;
+    }
+    .tabbtn.active { background:#111827; color:white; border-color:#111827; }
+    .card { background:white; border:1px solid #e5e7eb; border-radius: 16px; padding: 14px; }
+    .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
+    .badge { display:inline-block; padding: 4px 10px; border-radius: 999px; background:#eef2ff; border:1px solid #c7d2fe; font-size: 12px; }
+    .muted { color:#6b7280; }
+    .post { border-top:1px solid #eee; padding-top: 10px; margin-top: 10px; }
+    .post:first-child { border-top:none; padding-top:0; margin-top:0; }
+    .post h3 { margin:0 0 6px; }
+    .post .meta { font-size: 12px; color:#6b7280; }
+    .btn { border:1px solid #d1d5db; background:white; padding:10px 12px; border-radius:12px; cursor:pointer; font-weight:600; }
+    details { border:1px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; background:#fff; }
+    details + details { margin-top: 10px; }
+    summary { cursor:pointer; font-weight:700; }
+    .footer { text-align:center; padding: 20px; color:#6b7280; font-size: 13px; }
+    input { padding:10px 12px; border-radius: 12px; border:1px solid #d1d5db; min-width: 240px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h2 style="margin:0;">Student Hub</h2>
+      <small>Announcements • Jokes • FAQ</small>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="row">
+      <div class="tabs">
+        <button class="tabbtn active" data-tab="ann">📢 Announcements <span id="newBadge" class="badge" style="display:none;margin-left:6px;">NEW</span></button>
+        <button class="tabbtn" data-tab="jokes">😄 Jokes</button>
+        <button class="tabbtn" data-tab="faq">❓ FAQ</button>
+      </div>
+
+      <div class="row" style="gap:10px;">
+        <button class="btn" id="refreshBtn">↻ Refresh</button>
+        <!-- Optional: put your Telegram/WhatsApp group link here -->
+        <!-- <a class="btn" href="https://t.me/yourgroup" target="_blank" rel="noreferrer">Join Telegram</a> -->
+      </div>
+    </div>
+
+    <!-- ANNOUNCEMENTS -->
+    <section id="tab-ann" class="card">
+      <div class="row">
+        <div>
+          <b>Latest announcements</b><br/>
+          <span class="muted">You update these by editing <code>announcements.json</code> in GitHub.</span>
+        </div>
+        <div class="muted" id="lastCheck"></div>
+      </div>
+      <div id="annList" style="margin-top:12px;"></div>
+    </section>
+
+    <!-- JOKES -->
+    <section id="tab-jokes" class="card" style="display:none;">
+      <div class="row">
+        <div>
+          <b>Jokes</b><br/>
+          <span class="muted">You update these by editing <code>jokes.json</code>.</span>
+        </div>
+        <button class="btn" id="randomJokeBtn">🎲 Random joke</button>
+      </div>
+      <div id="jokeBox" class="post" style="margin-top:12px;"></div>
+      <div id="jokesList" style="margin-top:12px;"></div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="tab-faq" class="card" style="display:none;">
+      <div class="row">
+        <div>
+          <b>Frequently asked questions</b><br/>
+          <span class="muted">You update these by editing <code>faq.json</code>.</span>
+        </div>
+        <input id="faqSearch" placeholder="Search FAQ..." />
+      </div>
+      <div id="faqList" style="margin-top:12px;"></div>
+    </section>
+
+    <div class="footer">Made with GitHub Pages ✅</div>
+  </div>
+
+<script>
+  const tabs = document.querySelectorAll(".tabbtn");
+  const sections = { ann: "tab-ann", jokes: "tab-jokes", faq: "tab-faq" };
+
+  tabs.forEach(btn => btn.addEventListener("click", () => {
+    tabs.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    Object.values(sections).forEach(id => document.getElementById(id).style.display = "none");
+    document.getElementById(sections[btn.dataset.tab]).style.display = "block";
+  }));
+
+  const state = {
+    announcements: [],
+    jokes: [],
+    faq: []
+  };
+
+  function nowStamp() {
+    const d = new Date();
+    return d.toLocaleString();
+  }
+
+  async function loadJSON(path) {
+    // cache-bust so students see updates quickly
+    const res = await fetch(`${path}?v=${Date.now()}`);
+    if (!res.ok) throw new Error(`Failed to load ${path}`);
+    return await res.json();
+  }
+
+  function renderAnnouncements() {
+    const el = document.getElementById("annList");
+    el.innerHTML = "";
+
+    const items = state.announcements.slice().sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+
+    items.forEach((p, idx) => {
+      const div = document.createElement("div");
+      div.className = "post";
+      div.innerHTML = `
+        <h3>${p.title || "Announcement"}</h3>
+        <div class="meta">${p.date || ""} ${p.tag ? `• <span class="badge">${p.tag}</span>` : ""}</div>
+        <p style="margin:10px 0 0;">${(p.text || "").replaceAll("\n","<br/>")}</p>
+      `;
+      el.appendChild(div);
+    });
+
+    // “NEW” badge logic based on last seen date in localStorage
+    const latest = items[0]?.date || "";
+    const lastSeen = localStorage.getItem("lastSeenAnnouncement") || "";
+    const badge = document.getElementById("newBadge");
+    if (latest && latest !== lastSeen) badge.style.display = "inline-block";
+    else badge.style.display = "none";
+  }
+
+  function markAnnouncementsSeen() {
+    const latest = state.announcements.slice().sort((a,b)=> (b.date||"").localeCompare(a.date||""))[0]?.date || "";
+    if (latest) localStorage.setItem("lastSeenAnnouncement", latest);
+    document.getElementById("newBadge").style.display = "none";
+  }
+
+  function renderJokes() {
+    const list = document.getElementById("jokesList");
+    list.innerHTML = "";
+    state.jokes.forEach(j => {
+      const div = document.createElement("div");
+      div.className = "post";
+      div.innerHTML = `<b>${j.title || "Joke"}</b><p style="margin:8px 0 0;">${(j.text||"").replaceAll("\n","<br/>")}</p>`;
+      list.appendChild(div);
+    });
+  }
+
+  function randomJoke() {
+    if (!state.jokes.length) return;
+    const j = state.jokes[Math.floor(Math.random() * state.jokes.length)];
+    document.getElementById("jokeBox").innerHTML =
+      `<b>${j.title || "Random joke"}</b><p style="margin:8px 0 0;">${(j.text||"").replaceAll("\n","<br/>")}</p>`;
+  }
+
+  function renderFAQ(filter="") {
+    const list = document.getElementById("faqList");
+    list.innerHTML = "";
+    const f = filter.trim().toLowerCase();
+
+    state.faq
+      .filter(x => !f || (x.q||"").toLowerCase().includes(f) || (x.a||"").toLowerCase().includes(f))
+      .forEach(item => {
+        const d = document.createElement("details");
+        d.innerHTML = `<summary>${item.q || "Question"}</summary><div style="margin-top:8px;" class="muted">${(item.a||"").replaceAll("\n","<br/>")}</div>`;
+        list.appendChild(d);
+      });
+  }
+
+  async function refreshAll() {
+    document.getElementById("lastCheck").textContent = "Checking...";
+    try {
+      state.announcements = await loadJSON("announcements.json");
+      state.jokes = await loadJSON("jokes.json");
+      state.faq = await loadJSON("faq.json");
+
+      renderAnnouncements();
+      renderJokes();
+      renderFAQ(document.getElementById("faqSearch").value);
+      document.getElementById("lastCheck").textContent = `Last check: ${nowStamp()}`;
+    } catch (e) {
+      document.getElementById("lastCheck").textContent = "Error loading content.";
+      alert(e.message);
+    }
+  }
+
+  // Events
+  document.getElementById("refreshBtn").addEventListener("click", refreshAll);
+  document.querySelector('[data-tab="ann"]').addEventListener("click", markAnnouncementsSeen);
+  document.getElementById("randomJokeBtn").addEventListener("click", randomJoke);
+  document.getElementById("faqSearch").addEventListener("input", (e)=> renderFAQ(e.target.value));
+
+  refreshAll();
+</script>
+</body>
+</html>
