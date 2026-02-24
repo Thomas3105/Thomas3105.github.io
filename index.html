@@ -23,7 +23,7 @@
           📢 Obavijesti
           <span id="newBadge" class="badge" style="display:none;margin-left:6px;">NEW</span>
         </button>
-        <button class="tabbtn" data-tab="kateheze">📖 Kateheze po tjednima</button>
+        <button class="tabbtn" data-tab="kateheze">📖 Kateheze</button>
         <button class="tabbtn" data-tab="jokes">Po☕</button>
         <button class="tabbtn" data-tab="faq">❓ (ne)Zanimljiva pitanja</button>
       </div>
@@ -49,7 +49,7 @@
     <section id="tab-kateheze" class="card" style="display:none;">
       <div class="row">
         <div>
-          <b>Kateheze (po tjednima)</b><br/>
+          <b>Kateheze</b><br/>
         </div>
       </div>
 
@@ -158,23 +158,24 @@ function renderKateheze() {
     .slice()
     .sort((a,b)=> (b.date||"").localeCompare(a.date||""));
 
-  items.forEach((lesson, index) => {
+  items.forEach(lesson => {
 
-    const div = document.createElement("div");
-    div.className = "lessonCard";
+    const d = document.createElement("details");
 
-    div.innerHTML = `
-      <div class="lessonHeader">
-        <span class="lessonTitle">📖 ${lesson.title}</span>
-        <span class="lessonDate">${lesson.date}</span>
-      </div>
+    d.innerHTML = `
+      <summary>
+        📖 ${lesson.title || "Kateheza"}
+        <span class="badge" style="margin-left:8px;">
+          ${lesson.date || ""}
+        </span>
+      </summary>
 
-      <div class="lessonText">
+      <div style="margin-top:10px; line-height:1.6;" class="muted">
         ${(lesson.text || "").replaceAll("\n","<br/>")}
       </div>
     `;
 
-    list.appendChild(div);
+    list.appendChild(d);
   });
 }
 
