@@ -84,6 +84,21 @@
     </section>
   </div>
 
+  <!-- LESSON MODAL (popup) -->
+  <div id="lessonModal" class="modal" style="display:none;">
+    <div class="modalBox">
+      <div class="modalHeader">
+        <div>
+          <div id="modalTitle" class="modalTitle">Kateheza</div>
+          <div id="modalMeta" class="modalMeta"></div>
+        </div>
+        <button class="btn" id="modalCloseBtn">✖</button>
+      </div>
+
+      <div id="modalBody" class="modalBody"></div>
+    </div>
+  </div>
+
   <script>
     // Tabs
     const tabs = document.querySelectorAll(".tabbtn");
@@ -100,7 +115,6 @@
       Object.values(sections).forEach(id => document.getElementById(id).style.display = "none");
       document.getElementById(sections[btn.dataset.tab]).style.display = "block";
 
-      // If user opens announcements tab, mark as seen
       if (btn.dataset.tab === "ann") markAnnouncementsSeen();
     }));
 
@@ -154,34 +168,59 @@
       if (badge) badge.style.display = "none";
     }
 
-    // Render kateheze (LESSONS)
-function renderKateheze() {
-  const list = document.getElementById("katehezeList");
-  list.innerHTML = "";
+    // === Kateheze as clickable cards ===
+    function renderKateheze() {
+      const list = document.getElementById("katehezeList");
+      list.innerHTML = "";
 
-  const items = state.kateheze
-    .slice()
-    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+      const items = state.kateheze
+        .slice()
+        .sort((a,b)=> (b.date||"").localeCompare(a.date||""));
 
-  items.forEach(lesson => {
-    const d = document.createElement("details");
+      items.forEach(lesson => {
+        const card = document.createElement("div");
+        card.className = "kCard";
+        card.tabIndex = 0;
 
-    // OPTIONAL: open the newest lesson automatically
-    // d.open = true;
+        card.innerHTML = `
+          <div class="kCardTop">
+            <div class="kCardTitle">📖 ${lesson.title || "Kateheza"}</div>
+            <div class="kCardDate">${lesson.date || ""}</div>
+          </div>
+          <div class="kCardPreview">${lesson.preview || "Klikni da otvoriš katehezu."}</div>
+          <div class="kCardEnter">Uđi →</div>
+        `;
 
-    d.innerHTML = `
-      <summary>
-        📖 ${lesson.title || "Kateheza"}
-        <span class="badge" style="margin-left:8px;">${lesson.date || ""}</span>
-      </summary>
-      <div style="margin-top:8px;" class="muted">
-        ${(lesson.text || "").replaceAll("\n", "<br/>")}
-      </div>
-    `;
+        // You MUST have lesson.id in kateheze.json
+        card.addEventListener("click", () => openLesson(lesson.id));
+        card.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") openLesson(lesson.id);
+        });
 
-    list.appendChild(d);
-  });
-}
+        list.appendChild(card);
+      });
+    }
+
+    function openLesson(id) {
+      const lesson = state.kateheze.find(x => x.id === id);
+      if (!lesson) {
+        alert("Missing lesson id. Add 'id' to each object in kateheze.json (e.g. k1, k2, k3).");
+        return;
+      }
+
+      document.getElementById("modalTitle").textContent = `📖 ${lesson.title || "Kateheza"}`;
+      document.getElementById("modalMeta").textContent = lesson.date || "";
+      document.getElementById("modalBody").innerHTML =
+        (lesson.text || "").replaceAll("\n", "<br/>");
+
+      document.getElementById("lessonModal").style.display = "flex";
+      location.hash = `kateheza-${id}`;
+    }
+
+    function closeLesson() {
+      document.getElementById("lessonModal").style.display = "none";
+      if (location.hash.startsWith("#kateheza-")) history.replaceState(null, "", " ");
+    }
 
     // Render jokes
     function renderJokes() {
@@ -233,6 +272,12 @@ function renderKateheze() {
         renderFAQ(document.getElementById("faqSearch").value);
 
         lastCheck.textContent = `Last check: ${nowStamp()}`;
+
+        // Open lesson directly if URL has hash like #kateheza-k2
+        if (location.hash.startsWith("#kateheza-")) {
+          const id = location.hash.replace("#kateheza-", "");
+          openLesson(id);
+        }
       } catch (e) {
         lastCheck.textContent = "Error loading content.";
         alert(e.message);
@@ -246,6 +291,19 @@ function renderKateheze() {
     if (randomBtn) randomBtn.addEventListener("click", randomJoke);
 
     document.getElementById("faqSearch").addEventListener("input", (e)=> renderFAQ(e.target.value));
+
+    document.getElementById("modalCloseBtn").addEventListener("click", closeLesson);
+
+    document.getElementById("lessonModal").addEventListener("click", (e) => {
+      if (e.target.id === "lessonModal") closeLesson();
+    });
+
+    window.addEventListener("hashchange", () => {
+      if (location.hash.startsWith("#kateheza-")) {
+        const id = location.hash.replace("#kateheza-", "");
+        openLesson(id);
+      }
+    });
 
     // Init
     refreshAll();
