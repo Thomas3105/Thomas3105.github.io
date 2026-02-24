@@ -1,51 +1,37 @@
 [
   {
-    "id": "k1",
     "date": "2025-10-23",
     "title": "Upoznavanje",
-    "preview": "Prvi susret i upoznavanje grupe.",
     "text": "Ubaci tekst"
   },
   {
-    "id": "k2",
     "date": "2025-10-06",
     "title": "Put ka sreći - kršćanska svetost",
-    "preview": "Što znači biti svet u svakodnevnom životu?",
     "text": "Ubaci razmišljanje"
   },
   {
-    "id": "k3",
     "date": "2025-11-13",
     "title": "Promašaj cilja - grijeh",
-    "preview": "Razumjeti što je grijeh i kako nastaje.",
     "text": "Ubaci razmišljanje"
   },
   {
-    "id": "k4",
     "date": "2025-12-04",
     "title": "Molitva - povezani s Bogom",
-    "preview": "Zašto molimo i kako moliti?",
     "text": "Ubaci razmišljanje"
   },
   {
-    "id": "k5",
     "date": "2026-01-15",
     "title": "Osnove duhovne borbe - kušnje i napasti",
-    "preview": "Kako se nositi s napastima i kušnjama.",
     "text": "Ubaci razmišljanje"
   },
   {
-    "id": "k6",
     "date": "2026-01-20",
     "title": "Moć ponavljanja - moralne i teološke vrline",
-    "preview": "Oblikovanje karaktera kroz vrline.",
     "text": "Ubaci razmišljanje"
   },
   {
-    "id": "k7",
     "date": "2026-02-05",
     "title": "Raj, Pakao i Čistilište",
-    "preview": "Što Crkva uči o posljednjim stvarima.",
     "text": "Ubaci razmišljanje"
   }
 ]
